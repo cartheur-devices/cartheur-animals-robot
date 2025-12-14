@@ -1,4 +1,6 @@
-﻿namespace Cartheur.Animals.Robot
+﻿using System.Collections.Generic;
+
+namespace Cartheur.Animals.Robot
 {
     /// <summary>
     /// The static class containing programmatic motor functions.

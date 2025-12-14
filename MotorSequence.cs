@@ -1,4 +1,6 @@
-﻿namespace Cartheur.Animals.Robot
+﻿using System.Collections.Generic;
+
+namespace Cartheur.Animals.Robot
 {
     public class MotorSequence
     {

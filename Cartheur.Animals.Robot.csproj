@@ -2,15 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="AeonLoader.cs" />
-    <Compile Remove="LoaderPaths.cs" />
-    <Compile Remove="SharedFunctions.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="System.Data.SQLite">

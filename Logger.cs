@@ -1,6 +1,8 @@
 ﻿//
 // This autonomous intelligent system software is the property of Cartheur Research B.V. Copryright 2021 - 2025, all rights reserved.
 //
+using System;
+using System.IO;
 using System.Text;
 
 namespace Cartheur.Animals.Robot

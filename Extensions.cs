@@ -1,4 +1,8 @@
-﻿namespace Cartheur.Animals.Robot
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace Cartheur.Animals.Robot
 {
     public static class Extensions
     {
