@@ -400,13 +400,15 @@ namespace Cartheur.Animals.Robot
             {
                 motorArea = Motor.ReturnLocation(motors[i]);
                 if (motorArea == "upper")
+                {
                     TorqueOn = Dynamixel.read1ByteTxRx(PortNumberUpper, ProtocolVersion, Motor.ReturnID(motors[i]), MxAddress);
+                    i++;
+                }
                 if (motorArea == "lower")
+                {
                     TorqueOn = Dynamixel.read1ByteTxRx(PortNumberLower, ProtocolVersion, Motor.ReturnID(motors[i]), MxAddress);
-                if (TorqueOn == 1)
-                    return true;
-                else
-                    return result;
+                    i++;
+                }
             }
             return result;
         }
