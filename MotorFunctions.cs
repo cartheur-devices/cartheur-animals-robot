@@ -396,19 +396,13 @@ namespace Cartheur.Animals.Robot
         {
             bool result = false;
             string motorArea = "";
-            for (int i = 0; i < motors.Length;)
+            for (int i = 0; i < motors.Length; i++)
             {
                 motorArea = Motor.ReturnLocation(motors[i]);
                 if (motorArea == "upper")
-                {
                     TorqueOn = Dynamixel.read1ByteTxRx(PortNumberUpper, ProtocolVersion, Motor.ReturnID(motors[i]), MxAddress);
-                    i++;
-                }
                 if (motorArea == "lower")
-                {
                     TorqueOn = Dynamixel.read1ByteTxRx(PortNumberLower, ProtocolVersion, Motor.ReturnID(motors[i]), MxAddress);
-                    i++;
-                }
             }
             return result;
         }
