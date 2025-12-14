@@ -1,3 +1,4 @@
+#define linux
 using System;
 using System.Runtime.InteropServices;
 
@@ -8,7 +9,12 @@ namespace Cartheur.Animals.Robot
     /// </summary>
     public class Dynamixel
     {
+        #if linux
+        const string LibraryPath = "lib/libdxl_sbc_c.so";
+        #endif
+        #if windows
         const string LibraryPath = "lib/dxl_x64_c.dll";
+        #endif
 
         #region PortHandler        
         /// <summary>
