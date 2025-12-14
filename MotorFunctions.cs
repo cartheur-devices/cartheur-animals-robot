@@ -396,7 +396,7 @@ namespace Cartheur.Animals.Robot
         {
             bool result = false;
             string motorArea = "";
-            for (int i = 0; i < motors.Length; i++)
+            for (int i = 0; i < motors.Length;)
             {
                 motorArea = Motor.ReturnLocation(motors[i]);
                 if (motorArea == "upper")
