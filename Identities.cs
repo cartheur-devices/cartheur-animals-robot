@@ -1,11 +1,11 @@
 ﻿namespace Cartheur.Animals.Robot
 {
     /// <summary>
-    /// The set of identities for AX and MX Dynamixes motors.
+    /// The set of identities for AX and MX Dynamixal motors.
     /// </summary>
     public static class Identities
     {
-        // COM5 (lower-half)
+        // Lower-half
         public const int MXDX11 = 11;
         public const int MXDX12 = 12;
         public const int MXDX13 = 13;
@@ -16,7 +16,7 @@
         public const int MXDX23 = 23;
         public const int MXDX24 = 24;
         public const int MXDX25 = 25;
-        // COM4 (upper-half)
+        // Upper-half
         public const int MXDX31 = 31;
         public const int MXDX32 = 32;
         public const int MXDX33 = 33;
