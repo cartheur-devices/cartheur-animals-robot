@@ -10,7 +10,7 @@ namespace Cartheur.Animals.Robot
     public class Dynamixel
     {
         #if linux
-        const string LibraryPath = "lib/libdxl_sbc_c.so";
+        const string LibraryPath = "lib/libdxl_x64_c.so";
         #endif
         #if windows
         const string LibraryPath = "lib/dxl_x64_c.dll";
