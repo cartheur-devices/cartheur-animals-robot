@@ -26,5 +26,6 @@ All notable changes to this project are documented in this file.
 - Added sensor abstraction layer in `BalanceSensors.cs`:
   - IMU and foot-contact interfaces (`IImuProvider`, `IFootContactProvider`).
   - Default null providers for environments without hardware sensors.
+- Added `Mpu6050ImuProvider` and `IMpu6050Source` for chest-mounted MPU6050 orientation input (X/Y tilt), with axis/sign calibration and low-pass smoothing.
 - Extended `WalkController` with supervised execution (`ExecuteWalkCycleSupervised`) using timeout, IMU tilt checks, and stance foot-contact validation.
 - Added neutral-pose calibration helpers in `WalkController` (`CaptureNeutralPose`, `BuildSoftLimits`, `ClampPose`) and integrated soft-limit clamping into walk-step execution.
