@@ -100,9 +100,13 @@ namespace Cartheur.Animals.Robot
             {
                 try
                 {
-                    Dynamixel.openPort(MotorFunctions.PortNumberUpper);
-                    Dynamixel.openPort(MotorFunctions.PortNumberLower);
-                    DynamixelMotorsInitialized = true;
+                    bool upperOpened = Dynamixel.openPort(MotorFunctions.PortNumberUpper);
+                    bool lowerOpened = Dynamixel.openPort(MotorFunctions.PortNumberLower);
+                    DynamixelMotorsInitialized = upperOpened && lowerOpened;
+                    if (!DynamixelMotorsInitialized)
+                    {
+                        return "Failed to open one or more ports." + Environment.NewLine;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -394,7 +398,7 @@ namespace Cartheur.Animals.Robot
         }
         public bool IsTorqueOn(string[] motors)
         {
-            bool result = false;
+            bool result = true;
             string motorArea = "";
             for (int i = 0; i < motors.Length; i++)
             {
@@ -403,6 +407,8 @@ namespace Cartheur.Animals.Robot
                     TorqueOn = Dynamixel.read1ByteTxRx(PortNumberUpper, ProtocolVersion, Motor.ReturnID(motors[i]), MxAddress);
                 if (motorArea == "lower")
                     TorqueOn = Dynamixel.read1ByteTxRx(PortNumberLower, ProtocolVersion, Motor.ReturnID(motors[i]), MxAddress);
+                if (TorqueOn != TorqueEnable)
+                    result = false;
             }
             return result;
         }
@@ -645,6 +651,47 @@ namespace Cartheur.Animals.Robot
                         //return "0";
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Moves motors to target positions over a timed set of interpolation steps.
+        /// </summary>
+        /// <param name="targetPositions">Final target positions by motor name.</param>
+        /// <param name="durationMilliseconds">Total movement duration.</param>
+        /// <param name="interpolationSteps">Number of interpolation steps.</param>
+        public void MoveMotorSequenceSmooth(Dictionary<string, int> targetPositions, int durationMilliseconds, int interpolationSteps = 8)
+        {
+            if (targetPositions == null || targetPositions.Count == 0)
+                return;
+
+            if (durationMilliseconds < 1)
+                durationMilliseconds = 1;
+            if (interpolationSteps < 1)
+                interpolationSteps = 1;
+
+            var startPositions = new Dictionary<string, int>();
+            foreach (var target in targetPositions)
+            {
+                startPositions[target.Key] = GetPresentPosition(target.Key);
+            }
+
+            int sleepPerStep = Math.Max(1, durationMilliseconds / interpolationSteps);
+            for (int step = 1; step <= interpolationSteps; step++)
+            {
+                double alpha = step / (double)interpolationSteps;
+                var frame = new Dictionary<string, int>();
+                foreach (var target in targetPositions)
+                {
+                    int start = startPositions[target.Key];
+                    int value = start + (int)Math.Round((target.Value - start) * alpha);
+                    frame[target.Key] = value;
+                }
+
+                MoveMotorSequence(frame);
+
+                if (step < interpolationSteps)
+                    System.Threading.Thread.Sleep(sleepPerStep);
             }
         }
 

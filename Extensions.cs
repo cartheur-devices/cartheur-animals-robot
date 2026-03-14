@@ -7,7 +7,6 @@ namespace Cartheur.Animals.Robot
     public static class Extensions
     {
         static string[] valueDelimiter = { "--" };
-        static Dictionary<string, int> MotorFunctionalPairs = new Dictionary<string, int>();
 
         public static void StoreMotorSequenceAsFile(this Dictionary<string, int> value, string path)
         {
@@ -23,6 +22,7 @@ namespace Cartheur.Animals.Robot
         }
         public static Dictionary<string, int> BuildMotorSequence(this MotorSequence value, string path)
         {
+            var motorFunctionalPairs = new Dictionary<string, int>();
             using (StreamReader sr = new StreamReader(path))
             {
                 string _line;
@@ -31,11 +31,12 @@ namespace Cartheur.Animals.Robot
                     string[] keyvalue = _line.Split(valueDelimiter, StringSplitOptions.RemoveEmptyEntries);
                     if (keyvalue.Length == 2)
                     {
-                        MotorFunctionalPairs.Add(keyvalue[0], Convert.ToUInt16(keyvalue[1]));
+                        if (!motorFunctionalPairs.ContainsKey(keyvalue[0]))
+                            motorFunctionalPairs.Add(keyvalue[0], Convert.ToUInt16(keyvalue[1]));
                     }
                 }
             }
-            return MotorFunctionalPairs;
+            return motorFunctionalPairs;
         }
     }
 }

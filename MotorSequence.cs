@@ -17,6 +17,7 @@ namespace Cartheur.Animals.Robot
         { 
             SequenceCommand= new Dictionary<string, int>();
             MotorArrayOfInterest= new Dictionary<string, int>();
+            TrainingMotorSequence = new Dictionary<string, int>();
             MotorArraysOfInterest= new List<Dictionary<string, int>>();
             MotorControl= new MotorFunctions();
             // Due to experience with the second instance overriding the first, check this.
@@ -29,12 +30,13 @@ namespace Cartheur.Animals.Robot
         /// <param name="motorArray">The motor array passed in as, for example, <see cref="Limbic.Abdomen"/>.</param>
         public void CreateDictionaryOfPositions(string[] motorArray)
         {
+            MotorArrayOfInterest.Clear();
             foreach (var line in motorArray)
             {
                 // Get the current positions of the motors listed in the array.
                 MotorArrayOfInterest.Add(line, MotorControl.GetPresentPosition(line));
-                MotorArraysOfInterest.Add(MotorArrayOfInterest);
             }
+            MotorArraysOfInterest.Add(new Dictionary<string, int>(MotorArrayOfInterest));
         }
         /// <summary>
         /// Creates and returns the dictionary of positions based upon the <see cref="Limbic.LimbicArea"/>
@@ -64,6 +66,7 @@ namespace Cartheur.Animals.Robot
         /// <param name="instance">The instance.</param>
         public void CreatePositTrainingSelection(int sequence, string trainingSelection, string[] motorArray, Remember instance)
         {
+            TrainingMotorSequence.Clear();
             foreach (var line in motorArray)
             {
                 TrainingMotorSequence.Add(line, MotorControl.GetPresentPosition(line));

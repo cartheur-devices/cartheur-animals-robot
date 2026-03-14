@@ -10,6 +10,12 @@ namespace Cartheur.Animals.Robot
     {
         static readonly string[] newlineDelimiter = { "\n" };
         static readonly string[] valueDelimiter = { "--" };
+        static readonly HashSet<string> AllowedTables = new HashSet<string>
+        {
+            "AnimationMemory",
+            "StablePosition",
+            "TrainingSequence"
+        };
         public int AnimationID { get; set; }
         public string DataBaseTag { get; set; }
         private string Path { get; set; }
@@ -25,7 +31,8 @@ namespace Cartheur.Animals.Robot
         {
             DataBaseTag = @"\db\memory.db";
             Positions = new Dictionary<string, int>();
-            CommandPositions = new Dictionary<string, Dictionary<string, int>>();
+            if (CommandPositions == null)
+                CommandPositions = new Dictionary<string, Dictionary<string, int>>();
             Path = Environment.CurrentDirectory;
             CommandSyntax = new Syntax();
             // Retrieve all available data from the database and populate the dictionaries.
@@ -40,6 +47,9 @@ namespace Cartheur.Animals.Robot
         public Remember(string dataBaseTag)
         {
             DataBaseTag = dataBaseTag;
+            Positions = new Dictionary<string, int>();
+            if (CommandPositions == null)
+                CommandPositions = new Dictionary<string, Dictionary<string, int>>();
             Path = Environment.CurrentDirectory;
         }
         /// <summary>
@@ -72,27 +82,27 @@ namespace Cartheur.Animals.Robot
             {
                 // Store the ID, verbose command, and the technical positions.
                 string directory = MapPath(DataBaseTag);
-                SQLiteConnection conn = new SQLiteConnection(@"Data Source=" + Path + directory);
-                SQLiteCommand cmd = new SQLiteCommand();
-                cmd = conn.CreateCommand();
-                cmd.CommandText = "INSERT INTO AnimationMemory (AnimationID, VerboseCommand, Positions) VALUES ('" + AnimationID + "', '" + VerboseCommand + "', '" + positionData + "')";
-                conn.Open();
-                SQLiteTransaction trans = conn.BeginTransaction();
-                cmd.ExecuteNonQuery();
-                trans.Commit();
-                conn.Close();
-                trans.Dispose();
-                cmd.Dispose();
-                conn.Dispose();
+                using (SQLiteConnection conn = new SQLiteConnection(@"Data Source=" + Path + directory))
+                {
+                    conn.Open();
+                    using (SQLiteTransaction trans = conn.BeginTransaction())
+                    using (SQLiteCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "INSERT INTO AnimationMemory (AnimationID, VerboseCommand, Positions) VALUES (@animationId, @verboseCommand, @positions)";
+                        cmd.Parameters.AddWithValue("@animationId", AnimationID);
+                        cmd.Parameters.AddWithValue("@verboseCommand", VerboseCommand);
+                        cmd.Parameters.AddWithValue("@positions", positionData);
+                        cmd.ExecuteNonQuery();
+                        trans.Commit();
+                    }
+                }
             }
             catch (Exception ex)
             {
                 Logging.WriteLog("Error in database: " + ex.Message, Logging.LogType.Error, Logging.LogCaller.Memory);
+                return;
             }
-            finally
-            {
-                Logging.WriteLog("Animation data saved succesfully.", Logging.LogType.Information, Logging.LogCaller.Memory);
-            }
+            Logging.WriteLog("Animation data saved succesfully.", Logging.LogType.Information, Logging.LogCaller.Memory);
         }
         /// <summary>
         /// Stores the name of the positions, the motor name, and the technical positions.
@@ -113,8 +123,11 @@ namespace Cartheur.Animals.Robot
                     SQLiteCommand command = new SQLiteCommand
                     {
                         Connection = connection,
-                        CommandText = "INSERT INTO StablePosition (PositionType, MotorName, PositionValue) VALUES ('" + positionType + "', '" + kvp.Key + "', '" + kvp.Value + "')"
+                        CommandText = "INSERT INTO StablePosition (PositionType, MotorName, PositionValue) VALUES (@positionType, @motorName, @positionValue)"
                     };
+                    command.Parameters.AddWithValue("@positionType", positionType);
+                    command.Parameters.AddWithValue("@motorName", kvp.Key);
+                    command.Parameters.AddWithValue("@positionValue", kvp.Value);
                     command.ExecuteNonQuery();
                     Logging.WriteLog("Position " + kvp.Key + " written to database", Logging.LogType.Information, Logging.LogCaller.Memory);
                 }
@@ -141,8 +154,12 @@ namespace Cartheur.Animals.Robot
                     SQLiteCommand command = new SQLiteCommand
                     {
                         Connection = connection,
-                        CommandText = "INSERT INTO TrainingSequence (SequenceNumber, TrainingType, Motor, Position) VALUES ('" + sequence + "', '" + trainingSelection + "', '" + kvp.Key + "', '" + kvp.Value + "')"
+                        CommandText = "INSERT INTO TrainingSequence (SequenceNumber, TrainingType, Motor, Position) VALUES (@sequenceNumber, @trainingType, @motor, @position)"
                     };
+                    command.Parameters.AddWithValue("@sequenceNumber", sequence);
+                    command.Parameters.AddWithValue("@trainingType", trainingSelection);
+                    command.Parameters.AddWithValue("@motor", kvp.Key);
+                    command.Parameters.AddWithValue("@position", kvp.Value);
                     command.ExecuteNonQuery();
                     Logging.WriteLog("Training sequence " + sequence + " based on the training selection " + trainingSelection + " written to database", Logging.LogType.Information, Logging.LogCaller.Memory);
                 }
@@ -173,6 +190,11 @@ namespace Cartheur.Animals.Robot
         /// <returns></returns>
         public bool ClearTable(string tableName)
         {
+            if (!AllowedTables.Contains(tableName))
+            {
+                Logging.WriteLog("Rejected table clear request for " + tableName, Logging.LogType.Warning, Logging.LogCaller.Memory);
+                return false;
+            }
             string directory = MapPath(DataBaseTag);
             SQLiteConnection connection = new SQLiteConnection(@"Data Source=" + Path + directory);
             using (connection)
@@ -180,7 +202,7 @@ namespace Cartheur.Animals.Robot
                 connection.Open();
                 SQLiteCommand command = new SQLiteCommand();
                 command.Connection = connection;
-                command.CommandText = "DELETE FROM " + tableName + "";
+                command.CommandText = "DELETE FROM " + tableName;
                 command.ExecuteNonQuery();
                 Logging.WriteLog("Table " + tableName + " truncated", Logging.LogType.Information, Logging.LogCaller.Memory);
                 return true;
@@ -193,7 +215,7 @@ namespace Cartheur.Animals.Robot
         /// <returns></returns>
         public DataSet RetrieveData(string tableName)
         {
-            if (tableName == "")
+            if (tableName == "" || !AllowedTables.Contains(tableName))
                 return null;
             string directory = MapPath(DataBaseTag);
             SQLiteConnection connection = new SQLiteConnection(@"Data Source=" + Path + directory);
@@ -205,7 +227,7 @@ namespace Cartheur.Animals.Robot
                 SQLiteCommand command = new SQLiteCommand
                 {
                     Connection = connection,
-                    CommandText = "SELECT * FROM " + tableName + ""
+                    CommandText = "SELECT * FROM " + tableName
                 };
                 SQLiteDataAdapter adapt = new SQLiteDataAdapter(command);
                 try
@@ -230,9 +252,13 @@ namespace Cartheur.Animals.Robot
                 SQLiteCommand command = new SQLiteCommand
                 {
                     Connection = connection,
-                    CommandText = "SELECT PositionValue FROM StablePosition WHERE MotorName=" + limbic + ""
+                    CommandText = "SELECT PositionValue FROM StablePosition WHERE MotorName = @motorName LIMIT 1"
                 };
-                return (int)command.ExecuteScalar();
+                command.Parameters.AddWithValue("@motorName", limbic);
+                object result = command.ExecuteScalar();
+                if (result == null || result == DBNull.Value)
+                    return 0;
+                return Convert.ToInt32(result);
             }
         }
         /// <summary>
@@ -267,11 +293,12 @@ namespace Cartheur.Animals.Robot
                 SQLiteCommand cmd = new SQLiteCommand();
                 DataSet ds = new DataSet();
                 cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT * FROM AnimationMemory WHERE VerboseCommand LIKE " + "\'" + command + "\'";
+                cmd.CommandText = "SELECT * FROM AnimationMemory WHERE VerboseCommand = @command";
+                cmd.Parameters.AddWithValue("@command", command);
                 SQLiteDataAdapter adapt = new SQLiteDataAdapter(cmd);
                 adapt.Fill(ds);
                 conn.Close();
-                if (autoParse)
+                if (autoParse && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
                     ParseAnimation(ds, command);
                 adapt.Dispose();
 
@@ -296,12 +323,13 @@ namespace Cartheur.Animals.Robot
                 string[] entry = keyvalue[i].Split(valueDelimiter, StringSplitOptions.RemoveEmptyEntries);
                 if (entry.Length == 2)
                 {
-                    Positions.Add(entry[0], Convert.ToUInt16(entry[1]));
+                    if (!Positions.ContainsKey(entry[0]))
+                        Positions.Add(entry[0], Convert.ToUInt16(entry[1]));
                 }
             }
             var output = Positions.Select(kv => kv.Key + "--" + kv.Value.ToString());
             AnimationParsed = true;
-            CommandPositions.Add(command, new Dictionary<string, int>(Positions));
+            CommandPositions[command] = new Dictionary<string, int>(Positions);
             Positions.Clear();
 
         }
