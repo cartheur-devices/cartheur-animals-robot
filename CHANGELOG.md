@@ -23,3 +23,8 @@ All notable changes to this project are documented in this file.
   - `BipedGaitFactory` for generating a simple two-phase biped walking cycle from a neutral pose.
 - Added `MotorFunctions.MoveMotorSequenceSmooth(...)` to interpolate target positions over time for smoother movement transitions.
 - Added `WalkController` for high-level walking-cycle execution with basic safety checks (torque, load, temperature, voltage).
+- Added sensor abstraction layer in `BalanceSensors.cs`:
+  - IMU and foot-contact interfaces (`IImuProvider`, `IFootContactProvider`).
+  - Default null providers for environments without hardware sensors.
+- Extended `WalkController` with supervised execution (`ExecuteWalkCycleSupervised`) using timeout, IMU tilt checks, and stance foot-contact validation.
+- Added neutral-pose calibration helpers in `WalkController` (`CaptureNeutralPose`, `BuildSoftLimits`, `ClampPose`) and integrated soft-limit clamping into walk-step execution.
